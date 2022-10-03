@@ -32,17 +32,28 @@ const sendImage = (e) => {
   e.preventDefault();
 
   const imgPath = img.files[0].path;
-
+  const width = widthInput.value;
+  const height = heightInput.value;
   if (!img.files[0]) {
     alertError('please upload an image');
     return;
   }
 
-  if (!widthInput.value || !heightInput.value) {
+  if (!width || !height) {
     alertError('please provide width and height');
     return;
   }
+
+  ipcRenderer.send('image:resize', {
+    imgPath,
+    width,
+    height,
+  });
 };
+
+ipcRenderer.on('image:done', () => {
+  alertSuccess('image was resized successfully');
+});
 
 const checkFileIsImage = (file) => {
   const acceptedFormats = ['image/gif', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];

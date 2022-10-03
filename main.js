@@ -1,12 +1,15 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
+const os = require('os');
+const fs = require('fs');
+const resizeImg = require('resize-img');
 
 const isMac = process.platform === 'darwin';
-const isDev = process.env.NODE_ENV !== 'development';
-
+const isDev = process.env.NODE_ENV !== 'production';
+let mainWindow;
 //create main window
 const createMainWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     title: 'Simply Resize',
     width: isDev ? 1000 : 500,
     height: 600,
@@ -40,6 +43,8 @@ app.whenReady().then(() => {
 
   const mainMenu = Menu.buildFromTemplate(menu);
   Menu.setApplicationMenu(mainMenu);
+
+  mainMenu.on('closed', () => (mainWindow = null));
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -89,6 +94,35 @@ const menu = [
       ]
     : []),
 ];
+
+//respond to ipc
+
+ipcMain.on('image:resize', (e, options) => {
+  options.dest = path.join(os.homedir(), 'output');
+  resizeImage(options);
+});
+
+const resizeImage = async ({ imgPath, width, height, dest }) => {
+  try {
+    const image = await resizeImg(fs.readFileSync(imgPath), {
+      width: +width,
+      height: +height,
+    });
+    const filename = path.basename(imgPath);
+    const filetype = path.extname(imgPath);
+
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest);
+    }
+    fs.writeFileSync(path.join(dest, `${filename}-${width}x${height}.${filetype}`), image);
+
+    mainWindow.webContents.send('image:done');
+
+    shell.openPath(dest);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 app.on('window-all-closed', () => {
   if (!isMac) {
