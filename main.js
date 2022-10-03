@@ -131,3 +131,6 @@ app.on('window-all-closed', () => {
 });
 
 //npx electronmon .
+//npm install --save-dev @electron-forge/cli
+//npx electron-forge import
+//npm run make
