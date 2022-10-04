@@ -13,6 +13,7 @@ const createMainWindow = () => {
     title: 'Simply Resize',
     width: isDev ? 1000 : 500,
     height: 600,
+    icon: path.join(__dirname, './src/images/resize.png'),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
@@ -24,7 +25,7 @@ const createMainWindow = () => {
     mainWindow.webContents.openDevTools();
   }
 
-  mainWindow.loadFile(path.join(__dirname, './renderer/index.html'));
+  mainWindow.loadFile(path.join(__dirname, './src/index.html'));
 };
 
 //create about window
@@ -35,7 +36,7 @@ const createAboutWindow = () => {
     height: 300,
   });
 
-  aboutWindow.loadFile(path.join(__dirname, './renderer/about.html'));
+  aboutWindow.loadFile(path.join(__dirname, './src/about.html'));
 };
 
 app.whenReady().then(() => {
@@ -54,45 +55,92 @@ app.whenReady().then(() => {
 });
 
 const menu = [
+  // { role: 'appMenu' }
   ...(isMac
     ? [
         {
           label: app.name,
           submenu: [
-            {
-              label: 'About',
-              click: createAboutWindow,
-            },
+            { role: 'about' },
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideOthers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' },
           ],
         },
       ]
     : []),
-  {
-    role: 'fileMenu',
-  },
+  // { role: 'fileMenu' }
   {
     label: 'File',
+    submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
+  },
+  // { role: 'editMenu' }
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      ...(isMac
+        ? [
+            { role: 'pasteAndMatchStyle' },
+            { role: 'delete' },
+            { role: 'selectAll' },
+            { type: 'separator' },
+            {
+              label: 'Speech',
+              submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }],
+            },
+          ]
+        : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+    ],
+  },
+  // { role: 'viewMenu' }
+  {
+    label: 'View',
+    submenu: [
+      { role: 'reload' },
+      { role: 'forceReload' },
+
+      { type: 'separator' },
+      { role: 'resetZoom' },
+      { role: 'zoomIn' },
+      { role: 'zoomOut' },
+      { type: 'separator' },
+      { role: 'togglefullscreen' },
+    ],
+  },
+  // { role: 'windowMenu' }
+  {
+    label: 'Window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'zoom' },
+      ...(isMac
+        ? [{ type: 'separator' }, { role: 'front' }, { type: 'separator' }, { role: 'window' }]
+        : [{ role: 'close' }]),
+    ],
+  },
+  {
+    role: 'help',
     submenu: [
       {
-        label: 'Quit',
-        click: () => app.quit(),
-        accelerator: 'CmdOrCtrl+W',
+        label: 'About',
+        click: async () => {
+          const { shell } = require('electron');
+          await shell.openExternal('https://www.thembdev.com/projects');
+        },
       },
     ],
   },
-  ...(!isMac
-    ? [
-        {
-          label: 'Help',
-          submenu: [
-            {
-              label: 'About',
-              click: createAboutWindow,
-            },
-          ],
-        },
-      ]
-    : []),
 ];
 
 //respond to ipc
