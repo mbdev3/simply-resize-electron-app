@@ -1,3 +1,3 @@
 # simply-resize
 
-setup/simply-resize.exe for Windows
+setup/Simply-Resize.exe for Windows
